@@ -17,5 +17,5 @@ retrieve(){
 
 echo "running for $start_id to $end_id"
 . `which env_parallel.bash`
-seq -f "%1.0f" $start_id $end_id | env_parallel -P 10 retrieve {} 
+seq -f "%1.0f" $start_id $end_id | env_parallel -P 10 retrieve {}
 

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e29405d73211982aed48e6bcd3b185f9294bc3b2d2f84a95c14760ac8d628ca3"
+            "sha256": "e47aa5634a6304df26a5b6cc9183f44c1bb946c20d8583546543f1c1f3d01eda"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -83,6 +83,13 @@
                 "sha256:5ef9416b527b50d722f34655becfb75e49228eb82f87b855ed1911b3314b5408"
             ],
             "version": "==0.5"
+        },
+        "elasticsearch": {
+            "hashes": [
+                "sha256:1f0f633e3b500d5042424f75a505badf8c4b9962c1b4734cdfb3087fb67920be",
+                "sha256:fb5ab15ee283f104b5a7a5695c7e879cb2927e4eb5aed9c530811590b41259ad"
+            ],
+            "version": "==6.4.0"
         },
         "falcon": {
             "hashes": [
@@ -195,6 +202,13 @@
                 "sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"
             ],
             "version": "==2.22.0"
+        },
+        "requests-aws4auth": {
+            "hashes": [
+                "sha256:c9973af472d6d358ee301f077608361e078642aa019785139b588d526f50a23c",
+                "sha256:e20e4941ccd5706973068f9214d40cb2e669461536b3a57b9ac824ae87744c2c"
+            ],
+            "version": "==0.9"
         },
         "s3transfer": {
             "hashes": [

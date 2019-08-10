@@ -19,7 +19,7 @@ def attach_policy_json(**kwargs):
     return attach_policy(**kwargs).to_json()
 
 
-def attach_policy(*, region, acct_id, key_id, queue_name):
+def attach_policy(*, region, acct_id, key_id):
     return Policy(
         Version='2012-10-17',
         Statement=list(chain.from_iterable([
@@ -27,8 +27,7 @@ def attach_policy(*, region, acct_id, key_id, queue_name):
             stmts_lambda_invocation(),
             stmts_custom_domain(),
             stmts_vpc(),
-            stmts_custom_authorizer(region, acct_id, key_id),
-            stmts_app_webhook_handler(region, acct_id, queue_name),
+            stmts_custom_authorizer(region, acct_id, key_id)
         ]))
     )
 
@@ -81,42 +80,3 @@ def stmts_vpc():
         ],
         Resource=AllResources)]
 
-
-def stmts_app_webhook_handler(region, acct_id, queue_name):
-    return [
-        Statement(
-            Effect=Allow,
-            Action=[GetQueueUrl],
-            Resource=[f"arn:aws:sqs:{region}:{acct_id}:*"]
-        ),
-        Statement(
-            Effect=Allow,
-            Action=[SqsAction(All)],
-            Resource=[f"arn:aws:sqs:{region}:{acct_id}:*"]  # TODO: WRONG
-        ),
-        Statement(
-            Effect=Allow,
-            Action=[KMSAction(All)],
-            Resource=[f"arn:aws:kms:{region}:{acct_id}:*"]  # TODO: WRONG
-        )
-    ]
-
-
-def stmts_custom_authorizer(region, acct_id, key_id):
-    return [
-        # credstash
-        Statement(
-            Effect=Allow,
-            Action=[Decrypt],
-            Resource=[
-                f'arn:aws:kms:{region}:{acct_id}:key/{key_id}']
-        ),
-        # credstash
-        Statement(
-            Effect=Allow,
-            Action=[DdbGetItem, DdbQuery, DdbScan],
-            Resource=[
-                f'arn:aws:dynamodb:{region}:{acct_id}:table/credential-store'
-            ]
-        )
-    ]
