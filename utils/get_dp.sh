@@ -4,13 +4,20 @@
 # Dec 31 1964 2683350
 
 # have starting at 2105622
-start_id=2109022
+start_id=2500000
 end_id=2683350
 
 retrieve(){
   url="http://fedoraproxy.lib.virginia.edu/fedora/objects/uva-lib:$1/methods/djatoka:StaticSDef/getStaticImage"
   echo "--> $url"
-  curl -s -f $url | aws s3 cp - s3://philvarner-sources/daily_progress/$1.jpg
+  filename=$1.jpg
+  curl -s -f $url -o $filename
+  size=$(du -h "$filename" | cut -f1)
+  if [[ $? -eq 0 && $size > "0B" && $size < "3." ]]
+  then
+    aws s3 cp $filename s3://philvarner-sources/daily_progress/$filename
+  fi
+  rm $filename
   sleep 1
   return 0
 }

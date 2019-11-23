@@ -4,20 +4,21 @@
 # resource_suffix, e.g., dev-rcollimore, sandbox
 
 base_stage:
-  project_name: Cville Indexer
+  project_name: Cville-Indexer
   debug: true
   log_level: DEBUG
+  apigateway_enabled: false
   lambda_description: Cville Indexer
   aws_region: {region}
   profile_name: default
   runtime: python3.7
-  s3_bucket: cville_indexer-zappa
+  s3_bucket: pvarner-zappa-stage
   memory_size: 128
   attach_policy: tmp/attach_policy.json
   events:
-  - function: cville_indexer.s3_put_handler
+  - function: cville_indexer.handler
     event_source:
-      arn:  arn:aws:s3:::cville_indexer-assets
+      arn:  arn:aws:s3:::cville-indexer-assets
       events:
         - s3:ObjectCreated:*
 

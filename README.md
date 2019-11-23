@@ -2,6 +2,8 @@
 
 Index docs relevant to Charlottesville, including Daily Progress images from 1893-1968 and City Council meeting notes.
 
+    brew install tesseract
+
 ## Run Daily Progress image puller
 create a t3.small EC2 instance
 
@@ -16,13 +18,6 @@ export AWS_SECRET_ACCESS_KEY=
 vi get_dp.sh # add it
 chmod u+x get_dp.sh
 screen -L ./get_dp.sh
-
-wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -P /tmp
-
-sudo yum install -y /tmp/epel-release-latest-7.noarch.rpm
-
-sudo yum install -y --enablerepo epel moreutils
-
 ```
 
 
@@ -102,4 +97,37 @@ invoke update --env dev
 Debug:
 ```bash
 invoke tail --env dev
+```
+
+```bash
+virtualenv python --python=python3.7
+source python/bin/activate and then pip3 install boto3
+zip -r boto3_layer.zip python/lib/
+Create new Lambda Layer with boto3_layer.zip and add layer to Lambda Function
+```
+
+## Athena Tables
+
+```
+CREATE DATABASE IF NOT EXISTS cville_indexer
+```
+then
+```
+CREATE EXTERNAL TABLE cville_indexer.cville_indexer_assets_inventory (
+  bucket string,
+  key string,
+  size bigint,
+  last_modified_date timestamp
+  )
+  PARTITIONED BY (dt string)
+  ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.orc.OrcSerde'
+  STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.SymlinkTextInputFormat'
+  OUTPUTFORMAT  'org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat'
+  LOCATION 's3://philvarner-inventories/cville-indexer-assets/cville-indexer-assets/hive'
+```
+
+then
+
+```
+MSCK REPAIR TABLE cville_indexer.cville_indexer_assets_inventory
 ```

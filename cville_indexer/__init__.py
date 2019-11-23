@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 import boto3
 from elasticsearch import Elasticsearch, RequestsHttpConnection
@@ -9,7 +10,7 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-host = "vpc-cville-indexer-cffwqjesu5zyxr3erdivfqzzaa.us-east-1.es.amazonaws.com"
+host = "search-cville-indexer-public-osevbtjwraifeeq5p4gcmzjejq.us-east-1.es.amazonaws.com"
 
 
 def handler(event, _context):
@@ -21,13 +22,16 @@ def handler(event, _context):
 
         bucket = event['Records'][0]['s3']['bucket']['name']
         key = event['Records'][0]['s3']['object']['key']
+        size = event['Records'][0]['s3']['object']['size']
 
-        if key.endswith('.jpg') or key.endswith('.pdf'):
+        if key.endswith('.jpg') and key.startswith('daily_progress/') and 1800000 <= size <= 3000000:
+            handle_extraction(bucket, key)
+        elif key.endswith('.pdf'):
             handle_extraction(bucket, key)
         elif key.endswith(".json"):
             handle_indexing(bucket, key)
         else:
-            logger.error('ignoring: ' + str(bucket) + "/" + str(key), exc_info=True)
+            logger.error(f'ignoring: {str(bucket)}/{str(key)} size: {size}', exc_info=True)
     except KeyError:
         logger.error('key error', exc_info=True)
     except IndexError:
@@ -37,7 +41,8 @@ def handler(event, _context):
 
 
 def handle_extraction(bucket, key):
-    session = boto3.Session(profile_name='default')
+    time.sleep(5) # Textract has a default limit of 0.25 transactions / sec, so sleep a long time... ugh
+    session = boto3.Session()
 
     extraction = session.client('textract').detect_document_text(
         Document={
@@ -58,34 +63,32 @@ def handle_extraction(bucket, key):
 
 
 def handle_indexing(bucket, key):
-
-    session = boto3.Session(profile_name='default')
+    session = boto3.Session()
     obj = session.client('s3').get_object(
         Bucket=bucket,
         Key=key
     )
     extraction = json.loads(obj['Body'].read().decode('utf-8'))
     all_words = ' '.join(list(map(lambda x: x["Text"],
-                                  list(filter(lambda x: x["BlockType"] == "LINE", extraction["Blocks"]))
-                                  )))
-    credentials = session.get_credentials()
-    region = session.region_name
-    aws_auth = AWS4Auth(credentials.access_key, credentials.secret_key, region, 'es',
-                       session_token=credentials.token)
+                                   list(filter(lambda x: x["BlockType"] == "LINE", extraction["Blocks"]))
+                                   )))
     es = Elasticsearch(
         hosts=[{'host': host, 'port': 443}],
-        http_auth=aws_auth,
+        http_auth=AWS4Auth(
+            session.get_credentials().access_key,
+            session.get_credentials().secret_key,
+            session.region_name,
+            'es',
+            session_token=session.get_credentials().token),
         use_ssl=True,
         verify_certs=True,
         connection_class=RequestsHttpConnection
     )
     doc = {
-        "name": "{}".format(key),
         "bucket": "{}".format(bucket),
+        "key": "{}".format(key),
         "content": all_words
     }
-    res = es.index(index="test-index", id=key, body=doc)
+    res = es.index(index="test-index", doc_type="item", id=key, body=doc)
     logger.info(res['result'])
-
-
-
+    return doc

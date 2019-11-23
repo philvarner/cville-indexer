@@ -8,23 +8,22 @@ from cville_indexer.zappa_settings import generate_zappa_settings
 
 ACCT_ID = 'acct_id'
 REGION = 'region'
-CS_KEY_ID = 'cs_key_id'  # credstash key ID
 
 config = {
     'dev': {
-        ACCT_ID: '209012249534',
-        REGION: 'us-east-2'
+        ACCT_ID: '843732292144',
+        REGION: 'us-east-1'
     },
     'sandbox': {
-        ACCT_ID: '812129021960',
+        ACCT_ID: '843732292144',
         REGION: 'us-east-1'
     },
     'qa': {
-        ACCT_ID: '812129021960',
+        ACCT_ID: '843732292144',
         REGION: 'us-east-1'
     },
     'production': {
-        ACCT_ID: '812129021960',
+        ACCT_ID: '843732292144',
         REGION: 'us-east-1'
     }
 }
@@ -70,15 +69,14 @@ def tail(ctx, env):
 
 
 @task
-def build_attach_policy(ctx, env, resource_suffix):
+def build_attach_policy(ctx, env):
     output_filename = 'tmp/attach_policy.json'
 
     with open(output_filename, 'wt') as f:
         f.write(
             attach_policy_json(
                 region=config[env][REGION],
-                acct_id=config[env][ACCT_ID],
-                key_id=config[env][CS_KEY_ID]
+                acct_id=config[env][ACCT_ID]
             )
         )
 
@@ -103,7 +101,7 @@ def build_zappa_settings(ctx, env, resource_suffix, username):
 
 
 def zappa(ctx, cmd, env, resource_suffix):
-    build_attach_policy(ctx, env, resource_suffix)
+    build_attach_policy(ctx, env)
     build_zappa_settings(ctx, env, resource_suffix, user())
     stage = f'dev_{user()}' if env == 'dev' else env
     zappa_cmd = f"zappa {cmd} {stage} -s tmp/zappa_settings.yaml"
