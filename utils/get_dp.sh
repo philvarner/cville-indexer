@@ -4,8 +4,8 @@
 # Dec 31 1964 2683350
 
 # have starting at 2105622
-start_id=2500000
-end_id=2683350
+start_id=2070000
+end_id=2080000
 
 retrieve(){
   url="http://fedoraproxy.lib.virginia.edu/fedora/objects/uva-lib:$1/methods/djatoka:StaticSDef/getStaticImage"

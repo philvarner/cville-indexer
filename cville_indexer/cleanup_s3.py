@@ -28,11 +28,11 @@ def process_obj(obj):
             aws_cp = subprocess.Popen(('aws', 's3', 'cp', f's3://{str(bucket)}/{str(key)}', filename))
             aws_cp.wait()
             output = str(subprocess.check_output(('identify', filename)))
-            if 'Gray 256c' not in output:
-                print(f'not gray, so not copying: s3://{str(bucket)}/{str(key)} size: {size} {output}')
-            else:
+            if 'Gray 256c' in output or '8-bit PseudoClass 256c' in output:
                 s3.put_object(Body=open(filename, 'rb'), Bucket='pvarner-dailyprogress', Key=str(key))
                 print(f'ok: copy {str(key)} size: {size}')
+            else:
+                print(f'not gray, so not copying: s3://{str(bucket)}/{str(key)} size: {size} {output}')
             os.remove(filename)
             s3.delete_object(Bucket=bucket, Key=key)
     else:
