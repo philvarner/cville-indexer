@@ -8,7 +8,7 @@ Index docs relevant to Charlottesville, including Daily Progress images from 189
 create a t3.small EC2 instance
 
 ```bash
-sudo yum update
+sudo yum update -y
 (wget -O - pi.dk/3 || curl pi.dk/3/ || fetch -o - pi.dk/3) | bash
 parallel --citation
 
@@ -20,6 +20,8 @@ chmod u+x get_dp.sh
 screen -L ./get_dp.sh
 ```
 
+
+    python cville_indexer/cleanup_s3.py
 
 # Overview
 
@@ -113,7 +115,7 @@ CREATE DATABASE IF NOT EXISTS cville_indexer
 ```
 then
 ```
-CREATE EXTERNAL TABLE cville_indexer.cville_indexer_assets_inventory (
+CREATE EXTERNAL TABLE cville_indexer.pvarner_dailyprogress (
   bucket string,
   key string,
   size bigint,
@@ -123,11 +125,11 @@ CREATE EXTERNAL TABLE cville_indexer.cville_indexer_assets_inventory (
   ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.orc.OrcSerde'
   STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.SymlinkTextInputFormat'
   OUTPUTFORMAT  'org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat'
-  LOCATION 's3://philvarner-inventories/cville-indexer-assets/cville-indexer-assets/hive'
+  LOCATION 's3://pvarner-inventory/pvarner-dailyprogress/pvarner-dailyprogress/hive'
 ```
 
 then
 
 ```
-MSCK REPAIR TABLE cville_indexer.cville_indexer_assets_inventory
+MSCK REPAIR TABLE cville_indexer.pvarner_dailyprogress
 ```
