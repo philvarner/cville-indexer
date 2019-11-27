@@ -9,14 +9,10 @@ pool = Pool(10)
 
 bucket = 'philvarner-sources'
 prefix = 'daily_progress/'
-kwargs = {'Bucket': bucket, 'Prefix': prefix}
-
-s3 = boto3.Session().client('s3')
-continuation_token=''
-is_truncated=True
 
 
 def process_obj(obj):
+    s3 = boto3.Session().client('s3')
     key = obj['Key']
     size = obj['Size']
     if key.endswith('.jpg'):
@@ -29,7 +25,10 @@ def process_obj(obj):
             s3.download_file(bucket, key, filename)
             output = str(subprocess.check_output(('identify', filename)))
             if 'Gray 256c' in output or '8-bit PseudoClass 256c' in output:
-                s3.put_object(Body=open(filename, 'rb'), Bucket='pvarner-dailyprogress', Key=str(key))
+                f = open(filename, "rb")
+                file_content = f.read()
+                f.close()
+                s3.put_object(Body=file_content, Bucket='pvarner-dailyprogress', Key=str(key))
                 print(f'ok: copy {str(key)} size: {size} {output}')
             else:
                 print(f'not gray, so not copying: s3://{str(bucket)}/{str(key)}')
@@ -40,19 +39,18 @@ def process_obj(obj):
     return f'{str(bucket)}/{str(key)}'
 
 
-def f(x):
-    print(x)
-    return x
-
-
 def process_page(page):
     print(pool.map(process_obj, page))
 
 
 if __name__ == '__main__':
+    s3client = boto3.Session().client('s3')
+    kwargs = {'Bucket': bucket, 'Prefix': prefix}
     while True:
-        resp = s3.list_objects_v2(**kwargs)
+        print("Processing page...")
+        resp = s3client.list_objects_v2(**kwargs)
         process_page(resp['Contents'])
+        print("Processing page done.")
         try:
             kwargs['ContinuationToken'] = resp['NextContinuationToken']
         except KeyError:
