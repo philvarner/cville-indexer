@@ -40,7 +40,9 @@ def process_obj(obj):
 
 
 def process_page(page):
-    print(pool.map(process_obj, page))
+    #print(pool.map(process_obj, page))
+    for x in page:
+        print(process_obj(x))
 
 
 if __name__ == '__main__':
